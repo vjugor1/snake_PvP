@@ -14,10 +14,14 @@ public class Game {
         return time;
     };
 
+
+
     /* Cultural int constants to operate with game state
      *  1 at the beginning stands for game state */
     int GAME_MENU = 10; // initial, menu for view
     int GAME_EXECUTING = 11;
     int GAME_PAUSED = 12;
+
+
 
 }
