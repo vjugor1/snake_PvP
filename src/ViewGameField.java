@@ -10,11 +10,14 @@ import java.awt.event.KeyEvent;
 
 public class ViewGameField extends JPanel implements ActionListener {
     GameField gameField = new GameField();
-    final int timeTick = 350;
+    JTextField tf1 = new JTextField("i am here", 30);
+    final int timeTick = 550;
+    final int UPPER_FOOD_LIMIT = 100;
     private int SNAKES_NUM = 1;
     private final int SIZE = 960;
     private final int DOT_SIZE = 48;
     private final int ALL_DOTS = 400;
+    private boolean inGame = true;
     private Image dot;
     private Image apple;
     private Image poison;
@@ -24,13 +27,19 @@ public class ViewGameField extends JPanel implements ActionListener {
     //private int[] y = new int[ALL_DOTS];
     private Timer timer;
 
-    private void SetSnakes_Num(int num) {
+
+
+    boolean GetInGame(){
+        return this.inGame;
+    }
+
+    void SetSnakesNum(int num) {
         this.SNAKES_NUM = num;
     }
-    private int GetStartFoodPoisonNum(){
+    int GetStartFoodPoisonNum(){
         return this.StartFoodPoisonNum;
     }
-    private void SetStartFoodPoisonNum(int num){
+    void SetStartFoodPoisonNum(int num){
         this.StartFoodPoisonNum = num;
     }
 
@@ -44,7 +53,7 @@ public class ViewGameField extends JPanel implements ActionListener {
 
    public void InitGame(int snakesNum, int FPNum) {
        gameField.GenSnakes(snakesNum);
-       gameField.SetSnakes(gameField.snakes);
+       gameField.SetSnakes(gameField.snakes, false);
        timer = new Timer(timeTick, this);
        timer.start();
        this.SetStartFoodPoisonNum(FPNum);
@@ -64,30 +73,21 @@ public class ViewGameField extends JPanel implements ActionListener {
         ImageIcon iigO = new ImageIcon("game_over.png");
         gameOver = iigO.getImage();
     }
-    public int countInGameSnakes(){
-        int countInGameSnakes = 0;
-        for (int i = 0; i < this.gameField.snakes.size(); i ++) {
-            if (this.gameField.snakes.get(i).inGame){
-                countInGameSnakes ++;
-            }
-        }
-        //System.out.print(countInGameSnakes);
-        return countInGameSnakes;
-    }
+
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if(this.countInGameSnakes() >= 1){
+        if(this.gameField.countInGameSnakes() >= 1){
             for (int i = 0; i < gameField.MAX_X; i++){
                 for (int j = 0; j < gameField.MAX_Y; j ++){
-                    if ((gameField.map_cells[i][j] == gameField.CELL_FILLED) ){
+                    if ((gameField.GetCellValue(i, j) == GameField.CELL_FILLED) ){
                         g.drawImage(dot, i , j , this);
                     }
-                    if (gameField.map_cells[i][j] == gameField.CELL_FOOD){
+                    if (gameField.GetCellValue(i, j) == GameField.CELL_FOOD){
                         g.drawImage(apple, i , j , this);
                     }
-                    if (gameField.map_cells[i][j] == gameField.CELL_POISON){
+                    if (gameField.GetCellValue(i, j) == GameField.CELL_POISON){
                         g.drawImage(poison, i , j , this);
                     }
                 }
@@ -98,36 +98,39 @@ public class ViewGameField extends JPanel implements ActionListener {
             g.setColor(Color.black);
             g.setFont(f);
             g.drawString(str, 125, SIZE / 2);*/
-            setBackground(Color.black);
+            setBackground(Color.red);
             g.drawImage(gameOver, 0, 240, this);
+            //tf1 = new JTextField("hello, world", 30);
+            //this.add(tf1);
+            //tf1.addActionListener(this);
         }
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(this.countInGameSnakes() >= 1){
+        if(this.gameField.countInGameSnakes() >= 1){
             for (int i = 0; i < this.gameField.snakes.size(); i++){
-                if (this.gameField.snakes.get(i).inGame) {
+                if (this.gameField.GetSnake(i).inGame) {
                     //System.out.println(i+"th is going to make its move");
                     //System.out.println("Head location: x = " + gameField.snakes.get(i).GetHeadX() + ", y = " + gameField.snakes.get(i).GetHeadY());
-                    this.gameField.snakes.get(i).move();
+                    this.gameField.GetSnake(i).move();
                     if (this.gameField.snakes.get(i).GetFed() == false){
                        int tmp = this.GetStartFoodPoisonNum();
                        this.SetStartFoodPoisonNum(tmp + 1);
                     }
-                    while (this.gameField.GetFoodPoisonNum() <= this.GetStartFoodPoisonNum()){
-                        System.out.println("AM I IN WHILE WTF");
+                    while ((this.gameField.GetFoodPoisonNum() <= this.GetStartFoodPoisonNum()) && (this.gameField.GetFoodPoisonNum() <= UPPER_FOOD_LIMIT)){
+                        //System.out.println("AM I IN WHILE WTF");
                         this.gameField.MakeFoodPoison();
                     }
-                    System.out.println(i+"th snake has made its move");
-                    System.out.println("Head location: x = " + gameField.snakes.get(i).GetHeadX() / DOT_SIZE + ", y = " + gameField.snakes.get(i).GetHeadY() / DOT_SIZE);
-                    System.out.println(i+"th snake,iGame = "+gameField.snakes.get(i).inGame);
+                    //System.out.println(i+"th snake has made its move");
+                    //System.out.println("Head location: x = " + gameField.snakes.get(i).GetHeadX() / DOT_SIZE + ", y = " + gameField.snakes.get(i).GetHeadY() / DOT_SIZE);
+                    //System.out.println(i+"th snake,iGame = "+gameField.snakes.get(i).inGame);
                     /*System.out.println("body elements locations:");
                     for (int j = 0; j < this.gameField.snakes.get(i).GetBodyLen(); j++){
                         System.out.println(j+"th has direction"+this.gameField.snakes.get(i).GetBodyEl(j));
                     }*/
-                    System.out.println("Num of food or poison = " + gameField.GetFoodPoisonNum());
-                    System.out.println("LEN OF "+i+"th SNAKE = " + this.gameField.snakes.get(i).GetBodyLen());
+                    //System.out.println("Num of food or poison = " + gameField.GetFoodPoisonNum());
+                    //System.out.println("LEN OF "+i+"th SNAKE = " + this.gameField.snakes.get(i).GetBodyLen());
                 }
             }
         }
@@ -139,22 +142,32 @@ public class ViewGameField extends JPanel implements ActionListener {
         public void keyPressed(KeyEvent e) {
             super.keyPressed(e);
             int key = e.getKeyCode();
-            if(key == KeyEvent.VK_LEFT && (gameField.snakes.get(0).GetDir() != gameField.snakes.get(0).LEFT)){
-                gameField.snakes.get(0).SetDir(gameField.snakes.get(0).RIGHT);
-            }
-            if(key == KeyEvent.VK_RIGHT && (gameField.snakes.get(0).GetDir() != gameField.snakes.get(0).RIGHT)){
-                gameField.snakes.get(0).SetDir(gameField.snakes.get(0).LEFT);
-            }
-            if(key == KeyEvent.VK_UP && (gameField.snakes.get(0).GetDir() != gameField.snakes.get(0).UP)){
-                gameField.snakes.get(0).SetDir(gameField.snakes.get(0).DOWN);
-            }
-            if(key == KeyEvent.VK_DOWN && (gameField.snakes.get(0).GetDir() != gameField.snakes.get(0).DOWN)){
-                gameField.snakes.get(0).SetDir(gameField.snakes.get(0).UP);
+            for (int i = 0; i < gameField.GetSnakesNum(); i++) {
+
+                if(key == KeyEvent.VK_LEFT && (gameField.GetSnake(i).GetPrevDir() != gameField.GetSnake(i).LEFT)){
+                    gameField.GetSnake(i).SetDir(gameField.GetSnake(i).RIGHT);
+                }
+                if(key == KeyEvent.VK_RIGHT && (gameField.GetSnake(i).GetPrevDir() != gameField.GetSnake(i).RIGHT)){
+                    gameField.GetSnake(i).SetDir(gameField.GetSnake(i).LEFT);
+                }
+                if(key == KeyEvent.VK_UP && (gameField.GetSnake(i).GetPrevDir() != gameField.GetSnake(i).UP)){
+                    gameField.GetSnake(i).SetDir(gameField.GetSnake(i).DOWN);
+                }
+                if(key == KeyEvent.VK_DOWN && (gameField.GetSnake(i).GetPrevDir() != gameField.GetSnake(i).DOWN)){
+                    gameField.GetSnake(i).SetDir(gameField.GetSnake(i).UP);
+                }
             }
 
         }
     }
-
+    @Override
+    public void setLayout(LayoutManager layoutManager) {
+        super.setLayout(layoutManager);
+    }
+    @Override
+    public void setBounds(int x, int y, int width, int height){
+        super.setBounds(x, y, width, height);
+    }
 }
 
 

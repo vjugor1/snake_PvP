@@ -1,29 +1,29 @@
 import java.util.*;
+//CHANGE DIR ONLY ON TIMER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// you can make right left and smth STATIC because it s general for all game fields
 public class GameField {
     /* Map sizes must be entered there - as array sizes */
-    final int MAX_X = 960;
-    final int MAX_Y = 960;
-    final int CELLS_NUM = 20;
-    final int DOT_SIZE = MAX_X / CELLS_NUM;
-    final int INIT_SNAKE_SIZE = 3;
+    final static int MAX_X = 960;
+    final static int MAX_Y = 960;
+    final static int CELLS_NUM = 20;
+    final static int DOT_SIZE = MAX_X / CELLS_NUM;
+    final static int INIT_SNAKE_SIZE = 3;
     int[][] map_cells = new int[MAX_X][MAX_Y];
-    final int RIGHT = 0;
-    final int LEFT = 1;
-    final int UP = 2;
-    final int DOWN = 3;
     /* Cultural constant for modelling battle ground
     * 2 at the beginning stand for the cells*/
-    final int CELL_FILLED = 20;
-    final int CELL_EMPTY = 21;
-    final int CELL_FOOD = 22;
-    final int CELL_POISON = 23;
+    final static int CELL_FILLED = 20;
+    final static int CELL_EMPTY = 21;
+    final static int CELL_FOOD = 22;
+    final static int CELL_POISON = 23;
     /* nothing at the beginning stands for the CHECK results */
     final int CHECK_RES_CONTINUE = 0;
     final int CHECK_RES_END = 1;
     final int CHECK_RES_PAUSED_OR_MENU = 2;
+    private int winnerScore = 0;
     /* Snake list for several players */
     int FOOD_POISON_NUM = 1;
     List<Snake> snakes = new ArrayList<Snake>();
+    Snake snakeWinner;
     //List<Boolean> inGameSnakes;
     Random random = new Random();
     public class Point{
@@ -34,12 +34,25 @@ public class GameField {
         }
     }
 
+    void SetWinnerScore(int score){
+        this.winnerScore = score;
+    }
+    int GetWinnerScore(){
+        return this.winnerScore;
+    }
+
     public GameField(){
         for (int i = 0; i < MAX_X; i++){
             for (int j = 0; j < MAX_Y; j ++){
                 this.SetCell(i, j, CELL_EMPTY);
             }
         }
+    }
+    public int GetSnakesNum(){
+        return this.snakes.size();
+    }
+    public Snake GetSnake(int num){
+        return this.snakes.get(num);
     }
 
     public void GenSnakes(int snakesNum){
@@ -55,6 +68,17 @@ public class GameField {
             //inGameSnakes.add(true);
         }
         //System.out.println("I am in GF.GenSnakes. I've got " + this.snakes.size() + " snakes" );
+    }
+
+    public int countInGameSnakes(){
+        int countInGameSnakes = 0;
+        for (int i = 0; i < this.snakes.size(); i ++) {
+            if (this.GetSnake(i).inGame){
+                countInGameSnakes ++;
+            }
+        }
+        //System.out.print(countInGameSnakes);
+        return countInGameSnakes;
     }
 
     int GetCellValue(int x, int y){
@@ -86,64 +110,48 @@ public class GameField {
 
 
 
-    void SetSnakes(List<Snake> snakes){
-        for (int i = 0; i < MAX_X; i+=DOT_SIZE){
-            for (int j = 0; j < MAX_Y; j+=DOT_SIZE){
-                if (this.GetCellValue(i, j) != CELL_POISON && this.GetCellValue(i, j) != CELL_FOOD){
-                    this.SetCell(i, j, CELL_EMPTY);
-                }
-                if (((i >= 0) && (j ==0)) || (j >= 0 && (i == 0)) || ((i >= 0) && (j == (MAX_Y - DOT_SIZE))) || ((i == (MAX_X - DOT_SIZE)) && (j >= 0))){
-                    this.SetCell(i, j, CELL_FILLED);
+    void SetSnakes(List<Snake> snakes, boolean move){
+        if (!move) {
+            for (int i = 0; i < MAX_X; i += DOT_SIZE) {
+                for (int j = 0; j < MAX_Y; j += DOT_SIZE) {
+                    if (this.GetCellValue(i, j) != CELL_POISON && this.GetCellValue(i, j) != CELL_FOOD) {
+                        this.SetCell(i, j, CELL_EMPTY);
+                    }
+                    if (((i >= 0) && (j == 0)) || (j >= 0 && (i == 0)) || ((i >= 0) && (j == (MAX_Y - DOT_SIZE))) || ((i == (MAX_X - DOT_SIZE)) && (j >= 0))) {
+                        this.SetCell(i, j, CELL_FILLED);
+                    }
                 }
             }
-        }
-        for (int i = 0; i < snakes.size(); i++){
-            int currX = snakes.get(i).GetHeadX();
-            int currY = snakes.get(i).GetHeadY();
-            SetCell(currX, currY, CELL_FILLED);
-            for (int j = snakes.get(i).body.size() - 1; j > 0 ; j--)
-            {
-                //System.out.println("I'm in GameField.SetSnakes. i = " + i + " j = " + j);
-                int direction = snakes.get(i).body.get(j);
-                int dx = 0;
-                int dy = 0;
-                dx = this.GetDxDyDir(direction).x;
-                dy = this.GetDxDyDir(direction).y;
-                currX += dx;
-                currY += dy;
+        } else{
+            for (int i = 0; i < snakes.size(); i++){
+                int currX = snakes.get(i).GetHeadX();
+                int currY = snakes.get(i).GetHeadY();
                 SetCell(currX, currY, CELL_FILLED);
+                for (int j = snakes.get(i).body.size() - 1; j > 0 ; j--)
+                {
+                    //System.out.println("I'm in GameField.SetSnakes. i = " + i + " j = " + j);
+                    int direction = snakes.get(i).body.get(j);
+                    int dx = 0;
+                    int dy = 0;
+                    //System.out.println("oh j = " + j);
+                    //System.out.println("but bodysize is "+ snakes.get(i).body.size());
+                    dx = this.GetSnake(i).GetDxDyDir(direction).x;
+                    dy = this.GetSnake(i).GetDxDyDir(direction).y;
+                    currX += dx;
+                    currY += dy;
+                    SetCell(currX, currY, CELL_FILLED);
+                }
             }
         }
 
     }
 
-    public Point GetDxDyDir(int dir){
-        Point dPoint = new Point();
-        if (dir == RIGHT) {
-            dPoint.x = this.DOT_SIZE;
-            dPoint.y = 0;
 
-        }
-        if (dir == LEFT) {
-            dPoint.x = -this.DOT_SIZE;
-            dPoint.y = 0;
-        }
-        if (dir == UP) {
-            dPoint.x = 0;
-            dPoint.y = -this.DOT_SIZE;
-        }
-        if (dir == DOWN) {
-            dPoint.x = 0;
-            dPoint.y = this.DOT_SIZE;
-        }
-        return dPoint;
-
-    }
 
     public void MakeFoodPoison(){
         int xRand = random.nextInt(MAX_X / DOT_SIZE - 4) + 2;
         int yRand = random.nextInt(MAX_Y / DOT_SIZE - 4) + 2;
-        while (GetCellValue(xRand, yRand) == CELL_FILLED) {
+        while ((GetCellValue(xRand, yRand) == CELL_FILLED) || (GetCellValue(xRand, yRand) == CELL_POISON) || (GetCellValue(xRand, yRand) == CELL_FOOD)) {
             xRand = random.nextInt(MAX_X / DOT_SIZE - 4) + 2;
             yRand = random.nextInt(MAX_Y / DOT_SIZE - 4) + 2;
         }
