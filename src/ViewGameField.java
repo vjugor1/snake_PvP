@@ -11,7 +11,7 @@ import java.awt.event.KeyEvent;
 public class ViewGameField extends JPanel implements ActionListener {
     GameField gameField = new GameField();
     JTextField tf1 = new JTextField("i am here", 30);
-    final int timeTick = 550;
+    final int timeTick = 250;
     final int UPPER_FOOD_LIMIT = 100;
     private int SNAKES_NUM = 1;
     private final int SIZE = 960;

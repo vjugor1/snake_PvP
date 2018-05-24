@@ -5,19 +5,22 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ViewWindow {
-    JFrame frame;
-    JPanel pl1Panel;
-    JButton bttn;
-    JTextField nameField;
-    ViewGameField VGF;
+    private JFrame frame;
+    private JPanel pl1Panel;
+    private JButton bttn;
+    private JTextField nameField;
+    private ViewGameField VGF;
+    private JTextArea ratingArea;
+    private final static int TOP_NUM = 3;
     public class ActionListenerForButton implements ActionListener{
         @Override
         public void actionPerformed(ActionEvent event) {
             int snakesInGameCnt = 0;
             for (int i = 0; i < VGF.gameField.GetSnakesNum(); i++) {
-                if (VGF.gameField.GetSnake(i).inGame == true){
+                if (VGF.gameField.GetSnake(i).inGame){
                     snakesInGameCnt ++;
                 }
             }
@@ -28,17 +31,53 @@ public class ViewWindow {
                     sock = new Socket(InetAddress.getLocalHost(), 11111);
                     OutputStream outStream = sock.getOutputStream();
                     PrintWriter out = new PrintWriter(outStream);
+                    BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 
 
-                    out.print(tmp);
+                    ArrayList<String> rating = new ArrayList<>();
+                    String line;
+
+
+
+                    //System.out.println("view is going to send players rating");
+                    out.print(tmp + ": " + VGF.gameField.GetWinnerScore() + "\n" );
+                    out.flush();
+                    //System.out.println("view has sent players rating");
+                    //System.out.println("goig to recieve num " );
+                    //int numRating = in.read();
+                    //System.out.println("Got " + numRating);
+                    int cnt = 0;
+                    System.out.println("BEFORE WHILE");
+                    //System.out.println(in.readLine());
+                    while (((line = in.readLine()) != null) && (cnt <=5)){
+                        cnt ++;
+                        rating.add(line);
+                        System.out.println("I AM IJ WHIEL");
+                    }
+                    System.out.println("AFTER WHILE");
+                    System.out.println(rating);
+                    in.close();
                     out.close();
-                    sock.getOutputStream().write(VGF.gameField.GetWinnerScore());
+                    ratingArea.setBounds(480, 980, 450, 230);
+                    for (int i = 0; (i < cnt) && (i < TOP_NUM); i++) {
+                        if (i > 0) {
+                            ratingArea.setText(ratingArea.getText() + "\n" + rating.get(i));
+                        }else
+                        {
+                            ratingArea.setText(ratingArea.getText() + rating.get(i));
+
+                        }
+                    }
+                    ratingArea.setVisible(true);
+                    pl1Panel.add(ratingArea);
                     //System.out.println(sock.getInputStream().read());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 try{
-                    sock.close();
+                    if (sock != null){
+                        sock.close();
+                    }
                 } catch (IOException e){
                     e.printStackTrace();
                 }
@@ -57,6 +96,7 @@ public class ViewWindow {
         pl1Panel= new JPanel();
         bttn = new JButton("Submit!");
         nameField = new JTextField("Write your name here");
+        ratingArea = new JTextArea();
         VGF.setLayout(null);
         VGF.setBounds(0, 0, 960, 960);
         pl1Panel.setLayout(null);
